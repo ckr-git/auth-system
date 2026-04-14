@@ -64,3 +64,9 @@ cd frontend && npm install && npm run dev
 - **JWT + Redis 双层会话**: JWT 无状态验证 + Redis 支持即时撤销
 - **TOTP 双因素**: 登录时检测是否启用 TOTP，启用则返回 `mfa_token` 要求二次验证
 - **密码安全**: Argon2 哈希，token 存储使用 SHA-256 哈希
+
+## Token 账单（近半年）
+
+![Token 账单 1](docs/images/token-screenshot-1.png)
+
+![Token 账单 2](docs/images/token-screenshot-2.png)
