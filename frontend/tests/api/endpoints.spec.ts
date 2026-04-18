@@ -92,6 +92,28 @@ test.describe('API Integration Tests @smoke', () => {
     expect(body.data.length).toBeGreaterThan(0);
   });
 
+  test('Authenticated requests keep current session first', async ({ request }) => {
+    const beforeRes = await request.get(`${BASE}/api/sessions`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(beforeRes.status()).toBe(200);
+    const beforeBody = await beforeRes.json();
+    expect(beforeBody.data[0].is_current).toBe(true);
+
+    const meRes = await request.get(`${BASE}/api/subjects/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(meRes.status()).toBe(200);
+
+    const afterRes = await request.get(`${BASE}/api/sessions`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(afterRes.status()).toBe(200);
+    const afterBody = await afterRes.json();
+    expect(afterBody.data[0].is_current).toBe(true);
+    expect(afterBody.data[0].session_id).toBe(beforeBody.data[0].session_id);
+  });
+
   test('POST /api/auth/logout invalidates session', async ({ request }) => {
     const res = await request.post(`${BASE}/api/auth/logout`, {
       headers: { Authorization: `Bearer ${token}` },

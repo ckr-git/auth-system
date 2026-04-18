@@ -43,14 +43,18 @@ impl FromRequestParts<Arc<AppState>> for auth::Claims {
             )
         })?;
 
-        // Verify session is still active in Redis
         let mut redis = state.auth_service.redis().clone();
         let key = format!("session:{}", claims.session_id);
         let exists: bool = redis::cmd("EXISTS")
             .arg(&key)
             .query_async(&mut redis)
             .await
-            .unwrap_or(false);
+            .map_err(|_| {
+                (
+                    StatusCode::UNAUTHORIZED,
+                    Json(json!({ "success": false, "error": "Session validation failed" })),
+                )
+            })?;
 
         if !exists {
             return Err((
@@ -58,6 +62,13 @@ impl FromRequestParts<Arc<AppState>> for auth::Claims {
                 Json(json!({ "success": false, "error": "Session expired or revoked" })),
             ));
         }
+
+        state.session_service.touch(claims.session_id).await.map_err(|_| {
+            (
+                StatusCode::UNAUTHORIZED,
+                Json(json!({ "success": false, "error": "Session validation failed" })),
+            )
+        })?;
 
         Ok(claims)
     }

@@ -24,4 +24,5 @@ pub trait SessionRepository: Send + Sync {
     async fn find_active_by_subject(&self, subject_id: Uuid) -> Result<Vec<Session>, DomainError>;
     async fn deactivate(&self, session_id: Uuid, subject_id: Uuid) -> Result<(), DomainError>;
     async fn deactivate_by_token_hash(&self, token_hash: &str) -> Result<(), DomainError>;
+    async fn touch(&self, session_id: Uuid) -> Result<(), DomainError>;
 }

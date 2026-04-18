@@ -24,8 +24,8 @@ export default function AppLayout() {
         { key: '/admin/login', icon: <CrownOutlined />, label: 'Admin' },
       ];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/member/login');
   };
 

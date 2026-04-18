@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use crate::AppState;
 use crate::application::dto::{LoginRequest, LoginResponse, MfaVerifyRequest, SubjectResponse};
 use crate::domain::model::SubjectType;
-use crate::infrastructure::auth::Claims;
+use crate::infrastructure::auth::{self, Claims};
 use super::subject_handler::map_domain_error;
 
 pub async fn login(
@@ -70,14 +70,21 @@ pub async fn mfa_verify(
 }
 
 pub async fn logout(
-    claims: Claims,
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let token = headers.get("Authorization")
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.strip_prefix("Bearer "))
-        .unwrap_or("");
+        .ok_or_else(|| (
+            StatusCode::UNAUTHORIZED,
+            Json(json!({ "success": false, "error": "Missing authorization header" })),
+        ))?;
+
+    let claims = auth::verify_token(token, &state.jwt_secret).map_err(|_| (
+        StatusCode::UNAUTHORIZED,
+        Json(json!({ "success": false, "error": "Invalid or expired token" })),
+    ))?;
 
     state.auth_service.logout(claims.session_id, token).await.map_err(map_domain_error)?;
 

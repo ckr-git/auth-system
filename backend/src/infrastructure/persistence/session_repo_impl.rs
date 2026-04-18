@@ -84,4 +84,14 @@ impl SessionRepository for PgSessionRepository {
             .await?;
         Ok(())
     }
+
+    async fn touch(&self, session_id: Uuid) -> Result<(), DomainError> {
+        sqlx::query(
+            "UPDATE sessions SET last_active_at = NOW() WHERE id = $1 AND is_active = TRUE AND expires_at > NOW()",
+        )
+        .bind(session_id)
+        .execute(&self.pool)
+        .await?;
+        Ok(())
+    }
 }

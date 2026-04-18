@@ -11,6 +11,13 @@ test.describe('Auth Flow @smoke', () => {
   test.describe.configure({ mode: 'serial' });
 
   test('Member: register → dashboard → logout', async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') {
+        consoleErrors.push(msg.text());
+      }
+    });
+
     await page.goto('/member/login');
     await page.getByRole('tab', { name: 'Register' }).click();
     await page.getByTestId('register-input-username').fill(memberUser);
@@ -25,6 +32,7 @@ test.describe('Auth Flow @smoke', () => {
 
     await page.getByTestId('layout-btn-logout').click();
     await expect(page).toHaveURL('/member/login');
+    expect(consoleErrors.filter((message) => message.includes('/api/auth/logout'))).toEqual([]);
   });
 
   test('Staff: register → dashboard → logout', async ({ page }) => {

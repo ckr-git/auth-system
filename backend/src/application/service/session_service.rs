@@ -17,13 +17,20 @@ impl<Ss: SessionRepository> SessionService<Ss> {
         self.session_repo.find_active_by_subject(subject_id).await
     }
 
+    pub async fn touch(&self, session_id: Uuid) -> Result<(), DomainError> {
+        self.session_repo.touch(session_id).await
+    }
+
     pub async fn revoke(&self, session_id: Uuid, subject_id: Uuid) -> Result<(), DomainError> {
         self.session_repo.deactivate(session_id, subject_id).await?;
 
-        // Also remove from Redis
         let mut redis = self.redis.clone();
         let key = format!("session:{}", session_id);
-        let _: () = redis::cmd("DEL").arg(&key).query_async(&mut redis).await.unwrap_or(());
+        redis::cmd("DEL")
+            .arg(&key)
+            .query_async::<()>(&mut redis)
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
         Ok(())
     }

@@ -190,8 +190,11 @@ where
             return Err(DomainError::AuthenticationFailed("Invalid TOTP code".into()));
         }
 
-        // Delete MFA token
-        let _: () = redis::cmd("DEL").arg(&key).query_async(&mut redis).await.unwrap_or(());
+        redis::cmd("DEL")
+            .arg(&key)
+            .query_async::<()>(&mut redis)
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
         let subject = self
             .subject_repo
@@ -217,14 +220,16 @@ where
     }
 
     pub async fn logout(&self, session_id: Uuid, token: &str) -> Result<(), DomainError> {
-        // Deactivate in DB
         let token_hash = hash_token(token);
         self.session_repo.deactivate_by_token_hash(&token_hash).await?;
 
-        // Remove from Redis
         let mut redis = self.redis.clone();
         let key = format!("session:{}", session_id);
-        let _: () = redis::cmd("DEL").arg(&key).query_async(&mut redis).await.unwrap_or(());
+        redis::cmd("DEL")
+            .arg(&key)
+            .query_async::<()>(&mut redis)
+            .await
+            .map_err(|e| DomainError::Infrastructure(e.to_string()))?;
 
         Ok(())
     }
@@ -265,7 +270,6 @@ where
         let now = Utc::now();
         let token_hash = hash_token(&token);
 
-        // Write to DB
         let session = Session {
             id: session_id,
             subject_id: subject.id,
@@ -280,7 +284,6 @@ where
         };
         self.session_repo.create(&session).await?;
 
-        // Write to Redis for fast lookup
         let mut redis = self.redis.clone();
         let key = format!("session:{}", session_id);
         redis::cmd("SETEX")
