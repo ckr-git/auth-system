@@ -54,7 +54,20 @@ cd backend && cargo run
 cd frontend && npm install && npm run dev
 ```
 
-访问 http://localhost:5173
+- 前端默认地址：`http://localhost:5173`
+- 后端默认地址：`http://localhost:3000`
+
+## 前端页面
+
+| 路由 | 说明 |
+|------|------|
+| `/member/login` | Member 登录 / 注册 / Passkey 登录 |
+| `/staff/login` | Community Staff 登录 / 注册 / Passkey 登录 |
+| `/admin/login` | Platform Staff 登录 / 注册 / Passkey 登录 |
+| `/dashboard` | 当前登录用户资料与凭证状态、TOTP 设置 |
+| `/sessions` | 当前用户会话列表与会话撤销 |
+
+根路径 `/` 会自动跳转到 `/member/login`。
 
 ## API 端点
 
@@ -62,15 +75,54 @@ cd frontend && npm install && npm run dev
 |------|------|------|------|
 | GET | /api/health | - | 健康检查 |
 | POST | /api/subjects/register | - | 注册 |
-| POST | /api/auth/{type}/login | - | 登录 (type: member/staff/admin) |
-| POST | /api/auth/mfa/verify | - | MFA 验证 |
 | GET | /api/subjects/me | Bearer | 当前用户信息 |
+| POST | /api/auth/{subject_type}/login | - | 登录 (subject_type: member/staff/admin) |
+| POST | /api/auth/mfa/verify | - | MFA 验证 |
 | POST | /api/auth/logout | Bearer | 登出 |
 | GET | /api/credentials/status | Bearer | 凭证状态 |
-| POST | /api/credentials/totp/setup | Bearer | 设置 TOTP |
+| POST | /api/credentials/totp/setup | Bearer | 生成 TOTP 绑定信息 |
+| POST | /api/credentials/totp/confirm | Bearer | 确认并启用 TOTP |
 | POST | /api/credentials/totp/verify | Bearer | 验证 TOTP |
+| POST | /api/credentials/passkey/register-begin | Bearer | 发起 Passkey 注册 |
+| POST | /api/credentials/passkey/register-complete | Bearer | 完成 Passkey 注册 |
+| POST | /api/credentials/passkey/authenticate-begin | Bearer | 发起已登录状态 Passkey 验证 |
+| POST | /api/credentials/passkey/authenticate-complete | Bearer | 完成已登录状态 Passkey 验证 |
+| POST | /api/auth/passkey/begin | - | 发起 Passkey 登录 |
+| POST | /api/auth/passkey/complete | - | 完成 Passkey 登录 |
 | GET | /api/sessions | Bearer | 会话列表 |
-| DELETE | /api/sessions/{id} | Bearer | 撤销会话 |
+| DELETE | /api/sessions/{session_id} | Bearer | 撤销会话 |
+
+## 环境变量
+
+| 变量 | 必填 | 说明 | 示例 |
+|------|------|------|------|
+| `DATABASE_URL` | 是 | PostgreSQL 连接串 | `postgres://postgres:postgres@localhost:5432/auth_system` |
+| `REDIS_URL` | 是 | Redis 连接串 | `redis://127.0.0.1:6379` |
+| `JWT_SECRET` | 是 | JWT 签名密钥 | `change-me-to-a-random-secret` |
+| `RUST_LOG` | 否 | Rust 日志级别过滤 | `auth_system=debug,tower_http=debug` |
+| `WEBAUTHN_RP_ID` | 是 | WebAuthn relying party ID | `localhost` |
+| `WEBAUTHN_RP_ORIGIN` | 是 | WebAuthn relying party origin | `http://localhost:5173` |
+
+## 常用命令
+
+| 命令 | 说明 |
+|------|------|
+| `docker compose up -d` | 启动 PostgreSQL 和 Redis |
+| `docker compose down` | 停止基础设施 |
+| `cd backend && cargo run` | 启动后端 |
+| `cd backend && cargo build` | 构建后端 |
+| `cd backend && cargo test` | 运行后端测试 |
+| `cd frontend && npm test` | 运行前端 Playwright 测试 |
+| `cd frontend && npm run dev` | 启动前端开发服务器 |
+| `cd frontend && npm run build` | 构建前端 |
+| `cd frontend && npm run lint` | 运行前端 ESLint |
+
+## 更多文档
+
+- [环境变量说明](docs/ENV.md)
+- [API 参考](docs/API.md)
+- [开发贡献指南](docs/CONTRIBUTING.md)
+- [运行手册](docs/RUNBOOK.md)
 
 ## 设计决策
 
