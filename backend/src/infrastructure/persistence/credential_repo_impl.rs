@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 use crate::domain::error::DomainError;
@@ -24,7 +24,7 @@ impl CredentialRepository for PgCredentialRepository {
             VALUES ($1, 'password', $2)
             ON CONFLICT (subject_id, credential_type)
             WHERE credential_type IN ('password', 'totp')
-            DO UPDATE SET credential_data = $2, updated_at = NOW()
+            DO UPDATE SET credential_data = $2, is_active = TRUE, updated_at = NOW()
             "#,
         )
         .bind(subject_id)
@@ -35,13 +35,13 @@ impl CredentialRepository for PgCredentialRepository {
     }
 
     async fn find_password_hash(&self, subject_id: Uuid) -> Result<Option<String>, DomainError> {
-        let row: Option<(String,)> = sqlx::query_as(
+        let row = sqlx::query(
             "SELECT credential_data FROM credentials WHERE subject_id = $1 AND credential_type = 'password' AND is_active = TRUE",
         )
         .bind(subject_id)
         .fetch_optional(&self.pool)
         .await?;
-        Ok(row.map(|r| r.0))
+        Ok(row.map(|r| r.get("credential_data")))
     }
 
     async fn create_totp(&self, subject_id: Uuid, secret_data: &str) -> Result<(), DomainError> {
@@ -51,7 +51,7 @@ impl CredentialRepository for PgCredentialRepository {
             VALUES ($1, 'totp', $2)
             ON CONFLICT (subject_id, credential_type)
             WHERE credential_type IN ('password', 'totp')
-            DO UPDATE SET credential_data = $2, updated_at = NOW()
+            DO UPDATE SET credential_data = $2, is_active = TRUE, updated_at = NOW()
             "#,
         )
         .bind(subject_id)
@@ -62,13 +62,13 @@ impl CredentialRepository for PgCredentialRepository {
     }
 
     async fn find_totp_secret(&self, subject_id: Uuid) -> Result<Option<String>, DomainError> {
-        let row: Option<(String,)> = sqlx::query_as(
+        let row = sqlx::query(
             "SELECT credential_data FROM credentials WHERE subject_id = $1 AND credential_type = 'totp' AND is_active = TRUE",
         )
         .bind(subject_id)
         .fetch_optional(&self.pool)
         .await?;
-        Ok(row.map(|r| r.0))
+        Ok(row.map(|r| r.get("credential_data")))
     }
 
     async fn has_credential(&self, subject_id: Uuid, credential_type: &str) -> Result<bool, DomainError> {

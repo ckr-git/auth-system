@@ -4,12 +4,15 @@ const timestamp = Date.now();
 const username = `e2e_sessions_${timestamp}`;
 const password = 'TestPass123';
 
+function buildUsername(suffix: string) {
+  return `${username}_${suffix}`.slice(0, 32);
+}
+
 test.describe('Session Management @smoke', () => {
   test.beforeEach(async ({ page }) => {
-    // Register and login
     await page.goto('/member/login');
     await page.getByRole('tab', { name: 'Register' }).click();
-    await page.getByTestId('register-input-username').fill(username + '_' + test.info().title.slice(0, 8));
+    await page.getByTestId('register-input-username').fill(buildUsername(test.info().title.slice(0, 8)));
     await page.getByTestId('register-input-displayname').fill('Session Test');
     await page.getByTestId('register-input-password').fill(password);
     await page.getByTestId('register-btn-submit').click();
