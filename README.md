@@ -26,6 +26,20 @@ backend/src/
 
 ## 快速启动
 
+### Windows GNU 环境补充（fresh machine 必需）
+
+如果你在 Windows 上使用 Rust GNU toolchain（例如 `x86_64-pc-windows-gnu`），由于 `webauthn-rs` 会通过 OpenSSL 依赖链参与编译，新的机器需要先补齐 GNU 侧依赖，否则后端构建会在 `openssl-sys` / `pkg-config` 阶段失败。
+
+推荐通过 MSYS2 安装：
+
+```bash
+pacman -Syu
+pacman -Su
+pacman -S mingw-w64-ucrt-x86_64-openssl mingw-w64-ucrt-x86_64-pkgconf
+```
+
+本地运行后端前，确保构建环境能解析到 MSYS2 的 OpenSSL / pkg-config（例如把 `E:/msys64/ucrt64/bin` 放进 PATH，并让 `OPENSSL_DIR` / `OPENSSL_LIB_DIR` / `OPENSSL_INCLUDE_DIR` 指向对应目录）。
+
 ```bash
 # 1. 启动基础设施
 docker compose up -d

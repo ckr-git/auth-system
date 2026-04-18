@@ -159,7 +159,7 @@ export default function LoginPage() {
       <Card style={{ maxWidth: 400, margin: '40px auto' }}>
         <Title level={3}>MFA Verification</Title>
         <p>Enter the code from your authenticator app.</p>
-        {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+        {error && <Alert title={error} type="error" style={{ marginBottom: 16 }} />}
         <Input
           placeholder="6-digit code"
           value={mfaCode}
@@ -178,7 +178,7 @@ export default function LoginPage() {
   return (
     <Card style={{ maxWidth: 420, margin: '40px auto' }}>
       <Title level={3}>{info.label} Portal</Title>
-      {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
+      {error && <Alert title={error} type="error" style={{ marginBottom: 16 }} />}
       <Tabs
         defaultActiveKey="login"
         items={[
