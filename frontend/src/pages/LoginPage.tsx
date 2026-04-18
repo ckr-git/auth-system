@@ -123,11 +123,12 @@ export default function LoginPage() {
       const assertion = await navigator.credentials.get({ publicKey });
       if (!assertion) throw new Error('Passkey authentication cancelled');
 
-      const response = (assertion as PublicKeyCredential).response as AuthenticatorAssertionResponse;
+      const publicKeyCredential = assertion as PublicKeyCredential;
+      const response = publicKeyCredential.response as AuthenticatorAssertionResponse;
       const credential = {
-        id: assertion.id,
-        rawId: bufferToBase64url(assertion.rawId),
-        type: assertion.type,
+        id: publicKeyCredential.id,
+        rawId: bufferToBase64url(publicKeyCredential.rawId),
+        type: publicKeyCredential.type,
         response: {
           authenticatorData: bufferToBase64url(response.authenticatorData),
           clientDataJSON: bufferToBase64url(response.clientDataJSON),
