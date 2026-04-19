@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Table, Button, Tag, Alert, Typography, Popconfirm } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
 import { DeleteOutlined } from '@ant-design/icons';
 import api from '../api/client';
-import { useAuth } from '../contexts/AuthContext';
+import { getApiErrorMessage } from '../api/errors';
+import { useAuth } from '../contexts/useAuth';
 
 const { Title } = Typography;
 
@@ -21,30 +23,38 @@ export default function SessionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchSessions = () => {
+  const fetchSessions = async () => {
     setLoading(true);
-    api.get('/sessions')
-      .then((res) => setSessions(res.data.data || []))
-      .catch((err) => setError(err.response?.data?.error || 'Failed to load sessions'))
-      .finally(() => setLoading(false));
+    try {
+      const res = await api.get('/sessions');
+      setSessions(res.data.data || []);
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to load sessions'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    if (user) fetchSessions();
+    if (!user) {
+      return;
+    }
+
+    void fetchSessions();
   }, [user]);
 
   const handleRevoke = async (sessionId: string) => {
     try {
       await api.delete(`/sessions/${sessionId}`);
-      fetchSessions();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to revoke session');
+      await fetchSessions();
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Failed to revoke session'));
     }
   };
 
   if (!user) return <Alert message="Not authenticated" type="warning" />;
 
-  const columns = [
+  const columns: ColumnsType<Session> = [
     {
       title: 'Device',
       dataIndex: 'device_name',

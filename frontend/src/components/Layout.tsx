@@ -4,7 +4,7 @@ import {
   UserOutlined, TeamOutlined, CrownOutlined,
   DesktopOutlined, DashboardOutlined, LogoutOutlined,
 } from '@ant-design/icons';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 
 const { Header, Content, Sider } = Layout;
 

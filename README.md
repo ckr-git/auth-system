@@ -41,21 +41,27 @@ pacman -S mingw-w64-ucrt-x86_64-openssl mingw-w64-ucrt-x86_64-pkgconf
 本地运行后端前，确保构建环境能解析到 MSYS2 的 OpenSSL / pkg-config（例如把 `E:/msys64/ucrt64/bin` 放进 PATH，并让 `OPENSSL_DIR` / `OPENSSL_LIB_DIR` / `OPENSSL_INCLUDE_DIR` 指向对应目录）。
 
 ```bash
-# 1. 启动基础设施
+# 1. 确保 Docker Desktop / Docker daemon 已启动
+
+# 2. 启动基础设施
 docker compose up -d
 
-# 2. 配置环境变量
+# 3. 配置环境变量
 cp backend/.env.example backend/.env
 
-# 3. 启动后端 (自动执行数据库迁移)
+# 4. 在第一个终端启动后端 (自动执行数据库迁移；依赖 PostgreSQL 和 Redis 已可连接)
 cd backend && cargo run
+```
 
-# 4. 启动前端
+```bash
+# 5. 在第二个终端启动前端
 cd frontend && npm install && npm run dev
 ```
 
 - 前端默认地址：`http://localhost:5173`
 - 后端默认地址：`http://localhost:3000`
+- 后端必须单独启动；前端测试 / `npm test` 不会自动启动后端
+- Playwright 只会根据 `frontend/playwright.config.ts` 自动启动前端 dev server
 
 ## 前端页面
 

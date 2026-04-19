@@ -3,7 +3,8 @@ import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, Alert, Tabs, Divider } from 'antd';
 import { UserOutlined, LockOutlined, KeyOutlined } from '@ant-design/icons';
 import api from '../api/client';
-import { useAuth } from '../contexts/AuthContext';
+import { getApiErrorMessage } from '../api/errors';
+import { useAuth } from '../contexts/useAuth';
 
 const { Title } = Typography;
 
@@ -21,6 +22,12 @@ function bufferToBase64url(buffer: ArrayBuffer): string {
   let binary = '';
   for (const b of bytes) binary += String.fromCharCode(b);
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+interface PasskeyAllowCredential {
+  id: string;
+  type?: PublicKeyCredentialType;
+  transports?: AuthenticatorTransport[];
 }
 
 const TYPE_MAP: Record<string, { label: string; apiType: string; registerType: string }> = {
@@ -56,8 +63,8 @@ export default function LoginPage() {
         login(data.token);
         navigate('/dashboard');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Login failed'));
     } finally {
       setLoading(false);
     }
@@ -73,8 +80,8 @@ export default function LoginPage() {
       });
       login(res.data.data.token);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'MFA verification failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'MFA verification failed'));
     } finally {
       setLoading(false);
     }
@@ -89,8 +96,8 @@ export default function LoginPage() {
         subject_type: info.registerType,
       });
       await handleLogin({ username: values.username, password: values.password });
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Registration failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Registration failed'));
       setLoading(false);
     }
   };
@@ -114,9 +121,9 @@ export default function LoginPage() {
         publicKey.challenge = base64urlToBuffer(publicKey.challenge);
       }
       if (publicKey.allowCredentials) {
-        publicKey.allowCredentials = publicKey.allowCredentials.map((c: any) => ({
-          ...c,
-          id: base64urlToBuffer(c.id),
+        publicKey.allowCredentials = publicKey.allowCredentials.map((credential: PasskeyAllowCredential) => ({
+          ...credential,
+          id: base64urlToBuffer(credential.id),
         }));
       }
 
@@ -143,8 +150,8 @@ export default function LoginPage() {
       });
       login(completeRes.data.data.token);
       navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Passkey login failed');
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Passkey login failed'));
     } finally {
       setPasskeyLoading(false);
     }
@@ -159,7 +166,7 @@ export default function LoginPage() {
       <Card style={{ maxWidth: 400, margin: '40px auto' }}>
         <Title level={3}>MFA Verification</Title>
         <p>Enter the code from your authenticator app.</p>
-        {error && <Alert title={error} type="error" style={{ marginBottom: 16 }} />}
+        {error && <Alert message={error} type="error" style={{ marginBottom: 16 }} />}
         <Input
           placeholder="6-digit code"
           value={mfaCode}

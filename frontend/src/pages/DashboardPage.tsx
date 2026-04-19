@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Card, Descriptions, Button, Tag, Spin, Alert, Typography, Input } from 'antd';
-import { useAuth } from '../contexts/AuthContext';
 import api from '../api/client';
+import { getApiErrorMessage } from '../api/errors';
+import { useAuth } from '../contexts/useAuth';
 
 const { Title } = Typography;
 
@@ -21,10 +22,14 @@ export default function DashboardPage() {
   const [totpConfirming, setTotpConfirming] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
     api.get('/credentials/status')
       .then((res) => setCredentials(res.data.data))
-      .catch((err) => setError(err.response?.data?.error || 'Failed to load credentials'))
+      .catch((err: unknown) => setError(getApiErrorMessage(err, 'Failed to load credentials')))
       .finally(() => setLoading(false));
   }, [user]);
 
@@ -35,8 +40,7 @@ export default function DashboardPage() {
       setTotpSetup(res.data.data);
       setTotpConfirmCode('');
     } catch (err: unknown) {
-      const msg = (err as any).response?.data?.error || 'Failed to setup TOTP';
-      setError(msg);
+      setError(getApiErrorMessage(err, 'Failed to setup TOTP'));
     }
   };
 
@@ -50,8 +54,7 @@ export default function DashboardPage() {
       const credRes = await api.get('/credentials/status');
       setCredentials(credRes.data.data);
     } catch (err: unknown) {
-      const msg = (err as any).response?.data?.error || 'Invalid code, please try again';
-      setError(msg);
+      setError(getApiErrorMessage(err, 'Invalid code, please try again'));
     } finally {
       setTotpConfirming(false);
     }
