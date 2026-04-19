@@ -17,9 +17,11 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       const url = err.config?.url || '';
+      const isLogoutEndpoint = url.includes('/auth/logout');
       const isAuthEndpoint = url.includes('/auth/') || url.includes('/subjects/register');
-      if (!isAuthEndpoint) {
+      if (!isAuthEndpoint || isLogoutEndpoint) {
         localStorage.removeItem('token');
+        delete api.defaults.headers.common.Authorization;
         window.location.href = '/member/login';
       }
     }

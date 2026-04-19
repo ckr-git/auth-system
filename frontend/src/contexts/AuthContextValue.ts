@@ -13,6 +13,7 @@ type AuthContextType = {
   login: (token: string) => void;
   logout: () => Promise<void>;
   loading: boolean;
+  clearAuth: () => void;
 };
 
 export const AuthContext = createContext<AuthContextType>(null!);

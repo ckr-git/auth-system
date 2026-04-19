@@ -1,20 +1,39 @@
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import api from '../api/client';
 import { AuthContext, type User } from './AuthContextValue';
+
+function clearAuthorizationHeader() {
+  delete api.defaults.headers.common.Authorization;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
 
+  const clearAuth = useCallback(() => {
+    localStorage.removeItem('token');
+    clearAuthorizationHeader();
+    setToken(null);
+    setUser(null);
+  }, []);
+
   useEffect(() => {
     if (token) {
       api.get('/subjects/me')
         .then((res) => setUser(res.data.data))
-        .catch(() => { setToken(null); localStorage.removeItem('token'); })
+        .catch(() => clearAuth())
         .finally(() => setLoading(false));
     } else {
       setLoading(false);
+    }
+  }, [token, clearAuth]);
+
+  useEffect(() => {
+    if (token) {
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+    } else {
+      clearAuthorizationHeader();
     }
   }, [token]);
 
@@ -27,14 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api.post('/auth/logout');
     } finally {
-      localStorage.removeItem('token');
-      setToken(null);
-      setUser(null);
+      clearAuth();
+      window.location.href = '/member/login';
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, logout, loading, clearAuth }}>
       {children}
     </AuthContext.Provider>
   );
