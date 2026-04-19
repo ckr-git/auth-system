@@ -33,6 +33,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/auth_system
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-test-secret
+      SQLX_OFFLINE: true
+
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -46,10 +52,6 @@ jobs:
 
       - name: Test
         working-directory: backend
-        env:
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/auth_system
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-secret
         run: cargo test
 
   frontend:
