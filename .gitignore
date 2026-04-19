@@ -5,6 +5,7 @@
 
 # Rust
 backend/target/
+backend/.cargo/config.toml
 **/*.rs.bk
 
 # Node / Frontend

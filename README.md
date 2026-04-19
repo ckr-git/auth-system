@@ -26,35 +26,35 @@ backend/src/
 
 ## 快速启动
 
-### Windows GNU 环境补充（fresh machine 必需）
+### 前置依赖
 
-如果你在 Windows 上使用 Rust GNU toolchain（例如 `x86_64-pc-windows-gnu`），由于 `webauthn-rs` 会通过 OpenSSL 依赖链参与编译，新的机器需要先补齐 GNU 侧依赖，否则后端构建会在 `openssl-sys` / `pkg-config` 阶段失败。
+| 依赖 | 说明 |
+|------|------|
+| Docker / Docker Compose | PostgreSQL 16 + Redis 7 |
+| Rust (stable) | 后端编译 |
+| Node.js 22+ | 前端构建 |
+| OpenSSL 开发库 | `webauthn-rs` 编译依赖 |
 
-推荐通过 MSYS2 安装：
+OpenSSL 安装方式因平台而异：
+
+- macOS: `brew install openssl pkg-config`
+- Ubuntu/Debian: `sudo apt-get install libssl-dev pkg-config`
+- Windows (MSYS2 GNU): `pacman -S mingw-w64-ucrt-x86_64-openssl mingw-w64-ucrt-x86_64-pkgconf`，并配置 `OPENSSL_DIR` 等环境变量
+- Windows (MSVC): `vcpkg install openssl` 或使用预编译二进制
 
 ```bash
-pacman -Syu
-pacman -Su
-pacman -S mingw-w64-ucrt-x86_64-openssl mingw-w64-ucrt-x86_64-pkgconf
-```
-
-本地运行后端前，确保构建环境能解析到 MSYS2 的 OpenSSL / pkg-config（例如把 `E:/msys64/ucrt64/bin` 放进 PATH，并让 `OPENSSL_DIR` / `OPENSSL_LIB_DIR` / `OPENSSL_INCLUDE_DIR` 指向对应目录）。
-
-```bash
-# 1. 确保 Docker Desktop / Docker daemon 已启动
-
-# 2. 启动基础设施
+# 1. 启动基础设施
 docker compose up -d
 
-# 3. 配置环境变量
+# 2. 配置环境变量
 cp backend/.env.example backend/.env
 
-# 4. 在第一个终端启动后端 (自动执行数据库迁移；依赖 PostgreSQL 和 Redis 已可连接)
+# 3. 在第一个终端启动后端 (自动执行数据库迁移)
 cd backend && cargo run
 ```
 
 ```bash
-# 5. 在第二个终端启动前端
+# 4. 在第二个终端启动前端
 cd frontend && npm install && npm run dev
 ```
 
