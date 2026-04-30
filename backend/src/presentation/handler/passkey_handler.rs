@@ -6,6 +6,7 @@ use webauthn_rs::prelude::*;
 use crate::AppState;
 use crate::application::dto::{PasskeyLoginRequest, PasskeyLoginCompleteRequest, LoginResponse};
 use crate::infrastructure::auth::Claims;
+use crate::presentation::rejection::AppJson;
 use super::subject_handler::map_domain_error;
 
 pub async fn register_begin(
@@ -26,7 +27,7 @@ pub async fn register_begin(
 pub async fn register_complete(
     claims: Claims,
     State(state): State<Arc<AppState>>,
-    Json(reg): Json<RegisterPublicKeyCredential>,
+    AppJson(reg): AppJson<RegisterPublicKeyCredential>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     state
         .passkey_service
@@ -53,7 +54,7 @@ pub async fn authenticate_begin(
 pub async fn authenticate_complete(
     claims: Claims,
     State(state): State<Arc<AppState>>,
-    Json(auth): Json<PublicKeyCredential>,
+    AppJson(auth): AppJson<PublicKeyCredential>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     state
         .passkey_service
@@ -66,7 +67,7 @@ pub async fn authenticate_complete(
 
 pub async fn login_begin(
     State(state): State<Arc<AppState>>,
-    Json(req): Json<PasskeyLoginRequest>,
+    AppJson(req): AppJson<PasskeyLoginRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let (challenge_id, rcr) = state
         .passkey_service
@@ -86,7 +87,7 @@ pub async fn login_begin(
 pub async fn login_complete(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(req): Json<PasskeyLoginCompleteRequest>,
+    AppJson(req): AppJson<PasskeyLoginCompleteRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let credential: PublicKeyCredential = serde_json::from_value(req.credential)
         .map_err(|e| (StatusCode::BAD_REQUEST, Json(json!({ "success": false, "error": format!("Invalid credential: {}", e) }))))?;

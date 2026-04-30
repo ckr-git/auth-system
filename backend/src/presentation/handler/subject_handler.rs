@@ -5,10 +5,11 @@ use serde_json::{json, Value};
 use crate::AppState;
 use crate::application::dto::{RegisterSubjectRequest, SubjectResponse};
 use crate::domain::DomainError;
+use crate::presentation::rejection::AppJson;
 
 pub async fn register(
     State(state): State<Arc<AppState>>,
-    Json(req): Json<RegisterSubjectRequest>,
+    AppJson(req): AppJson<RegisterSubjectRequest>,
 ) -> Result<(StatusCode, Json<Value>), (StatusCode, Json<Value>)> {
     let subject = state
         .auth_service

@@ -6,13 +6,14 @@ use crate::AppState;
 use crate::application::dto::{LoginRequest, LoginResponse, MfaVerifyRequest, SubjectResponse};
 use crate::domain::model::SubjectType;
 use crate::infrastructure::auth::{self, Claims};
+use crate::presentation::rejection::AppJson;
 use super::subject_handler::map_domain_error;
 
 pub async fn login(
     Path(subject_type_str): Path<String>,
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(req): Json<LoginRequest>,
+    AppJson(req): AppJson<LoginRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let subject_type = parse_subject_type(&subject_type_str)?;
 
@@ -47,7 +48,7 @@ pub async fn login(
 pub async fn mfa_verify(
     State(state): State<Arc<AppState>>,
     headers: HeaderMap,
-    Json(req): Json<MfaVerifyRequest>,
+    AppJson(req): AppJson<MfaVerifyRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let device_name = headers.get("X-Device-Name").and_then(|v| v.to_str().ok()).map(String::from);
     let device_ip = headers.get("X-Forwarded-For").and_then(|v| v.to_str().ok()).map(String::from);

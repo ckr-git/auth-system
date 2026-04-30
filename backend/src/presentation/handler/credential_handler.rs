@@ -5,6 +5,7 @@ use serde_json::{json, Value};
 use crate::AppState;
 use crate::application::dto::{TotpVerifyRequest, TotpSetupResponse, CredentialStatusResponse};
 use crate::infrastructure::auth::Claims;
+use crate::presentation::rejection::AppJson;
 use super::subject_handler::map_domain_error;
 
 pub async fn totp_setup(
@@ -24,7 +25,7 @@ pub async fn totp_setup(
 pub async fn totp_confirm(
     claims: Claims,
     State(state): State<Arc<AppState>>,
-    Json(req): Json<TotpVerifyRequest>,
+    AppJson(req): AppJson<TotpVerifyRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let valid = state.credential_service.confirm_totp(claims.sub, &req.code).await.map_err(map_domain_error)?;
 
@@ -38,7 +39,7 @@ pub async fn totp_confirm(
 pub async fn totp_verify(
     claims: Claims,
     State(state): State<Arc<AppState>>,
-    Json(req): Json<TotpVerifyRequest>,
+    AppJson(req): AppJson<TotpVerifyRequest>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     let valid = state.credential_service.verify_totp(claims.sub, &req.code).await.map_err(map_domain_error)?;
 

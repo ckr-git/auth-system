@@ -1,11 +1,12 @@
 use std::sync::Arc;
-use axum::{extract::{Path, State}, http::StatusCode, Json};
+use axum::{extract::State, http::StatusCode, Json};
 use serde_json::{json, Value};
 use uuid::Uuid;
 
 use crate::AppState;
 use crate::application::dto::SessionInfo;
 use crate::infrastructure::auth::Claims;
+use crate::presentation::rejection::AppPath;
 use super::subject_handler::map_domain_error;
 
 pub async fn list_sessions(
@@ -28,7 +29,7 @@ pub async fn list_sessions(
 
 pub async fn revoke_session(
     claims: Claims,
-    Path(session_id): Path<Uuid>,
+    AppPath(session_id): AppPath<Uuid>,
     State(state): State<Arc<AppState>>,
 ) -> Result<Json<Value>, (StatusCode, Json<Value>)> {
     state.session_service.revoke(session_id, claims.sub).await.map_err(map_domain_error)?;
